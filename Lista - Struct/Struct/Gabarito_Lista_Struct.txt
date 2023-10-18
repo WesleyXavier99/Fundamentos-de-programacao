@@ -1,0 +1,731 @@
+//Definição de constantes
+#define TRUE 1 //valores lógicos
+#define FALSE 0
+
+#define N 10 //número de eleitores da zona eleitoral
+#define C 5 //número de candidatos
+
+/*
+a. A declaração de todo(s) o(s) tipo(s) de dados necessário(s) para o armazenamento
+dos números dos candidatos, assim como a quantidade de votos brancos, nulos e votos
+para cada candidato.
+*/
+
+//definição de tipos
+typedef struct { //representa um candidato, com seu número e a quantidade de
+int numero, //votos recebidas
+votos;
+} TCandidato;
+
+typedef struct { //representa o resultado da eleição
+int brancos, //total de votos brancos
+nulos, //total de votos nulos
+totalVotos; //total de votos (que pode ser diferente da quantidade de eleitores)
+TCandidato candidatos[C]; //Vetor com os dados (número e votos recebidos) de cada candidato
+} TEleicao;
+
+//main
+void main ()
+{
+TEleicao resultado; //armazenará o resultado da eleição
+...
+}
+
+
+/*
+b. Uma função que leia o voto de cada eleitor, considerando que o processo terminará
+quando os N eleitores votarem ou quando o número -1 for digitado como voto.
+*/
+
+void lerVotos (TEleicao *eleicao, int numCandidatos, int numEleitores)
+{
+int cont = 0, voto, valido, cand;
+
+//Zerando os totais de votos
+incializarEleicao (eleicao, numCandidatos);
+
+system ("cls");
+
+do
+{
+do
+{
+//leitura do voto
+printf ("Entre com o numero do candidato: ");
+scanf ("%d", &voto);
+
+//testando se é para terminar a votação ou se é voto branco
+if ((voto == 0) || (voto == -1))
+{
+valido = TRUE;
+}
+else
+{
+valido = ehValido (voto);
+if (!valido)
+{
+printf ("\n\nERRO: O numero do candidato deve possuir dois algarismos! Tente novamente.\n");
+}
+}
+}
+while (!valido);
+
+//se a votação ainda continua...
+if (voto != -1)
+{
+//atualizando a quantidade de votos
+cont++;
+
+//verificando o tipo de voto doe leitor (válido, branco ou nulo)
+cand = buscarCandidato (*eleicao, numCandidatos, voto);
+
+switch (cand)
+{
+//branco
+case -1: (*eleicao).brancos++;
+break;
+
+//nulo
+case -2: (*eleicao).nulos++;
+break;
+
+default: (*eleicao).candidatos[cand].votos++;
+}
+}
+}
+while ((cont < numEleitores) && (voto != -1));
+
+//armazenando a quantidade de votos
+(*eleicao).totalVotos = cont;
+}
+
+//zera os totais de votos brancos, nulos, de cada candidato..., além de ler os números dos candidatos
+void incializarEleicao (TEleicao *eleicao, int numCandidatos)
+{
+int i, voto, valido;
+
+//zerando os totais de votos
+(*eleicao).brancos = (*eleicao).nulos = (*eleicao).totalVotos = 0;
+
+//lendo os numeros dos candidatos e zerando a quantidade de votos deles
+system ("cls");
+printf ("LEITURA DOS NUMEROS DOS CANDIDATOS:\n\n");
+
+for (i=0;i<numCandidatos;i++)
+{
+do
+{
+//leitura do voto
+printf ("\tEntre com o numero do %do. candidato: ", i+1);
+scanf ("%d", &voto);
+
+valido = ehValido (voto);
+if (!valido)
+{
+printf ("\n\nERRO: O numero do candidato deve possuir dois algarismos! Tente novamente.\n");
+}
+}
+while (!valido);
+
+(*eleicao).candidatos[i].numero = voto;
+(*eleicao).candidatos[i].votos = 0;
+}
+}
+
+//verifica se o voto é válido. Ou seja, se possui dois algarismos
+int ehValido (int voto)
+{
+return ((voto >= 10) && (voto <=99))?TRUE:FALSE;
+}
+
+/*Busca no vetor de candidatos o voto do eleitor. Se encontrar, retorna a posição do vetor;
+se o voto for 0 (branco), retornará -1; se for nulo, retornará -2*/
+int buscarCandidato (TEleicao eleicao, int numCandidatos, int voto)
+{
+int i;
+
+//verificando se é um voto branco
+if (voto == 0)
+{
+return -1;
+}
+
+//varrendo o vetor de candidatos
+for (i=0;i<numCandidatos;i++)
+{
+if (eleicao.candidatos[i].numero == voto)
+{
+return i;
+}
+}
+
+//candidato inexistente. Portanto, voto nulo
+return -2;
+}
+
+/*
+c. Uma função que exiba:
+i. O total de votos para cada candidato, assim com a quantidade de votos brancos
+(código 0) e de nulos (código sem candidato associado);
+ii. A quantidade de abstenções (eleitores que não votaram);
+iii. O número do candidato vencedor (caso tenha mais de 50% dos votos válidos) ou dos
+que irão para o segundo turno (os dois mais votados).
+*/
+
+void exibirResultado (TEleicao eleicao, int numCandidatos, int numEleitores)
+{
+int i;
+
+system ("cls");
+printf ("RESULTADO DA ELEICAO:\n\n\n");
+
+//exbindo o total de votos brancos e nulos
+printf ("Votos brancos: %d\n", eleicao.brancos);
+printf ("Votos nulos: %d\n", eleicao.nulos);
+
+//exbindo o total de votos para cada candidato
+printf ("\nVotos para cada candidato:\n");
+
+for (i=0;i<numCandidatos;i++)
+{
+printf ("\tCandidato %d: %d votos\n", eleicao.candidatos[i].numero, eleicao.candidatos[i].votos);
+}
+
+//exibindo a quantidade de abstenções (eleitores que não votaram)
+printf ("\nAbstencoes: %d\n", numEleitores-eleicao.totalVotos);
+
+//exibindo o candidato vencedor (caso tenha mais de 50% dos votos válidos) ou
+//dos que irão para o segundo turno (os dois mais votados)
+exibirDadosVencedores (eleicao, numCandidatos);
+}
+
+/*Função que exibe o número do candidato vencedor (caso tenha mais de 50% dos votos
+válidos) ou dos que irão para o segundo turno (os dois mais votados)*/
+void exibirDadosVencedores (TEleicao eleicao, int numCandidatos)
+{
+int i, maior = -1, segMaior = -1, venc1, venc2, votosValidos;
+float perc1;
+
+//verificando os votos de cada candidato
+for (i=0;i<numCandidatos;i++)
+{
+if (eleicao.candidatos[i].votos > maior)
+{
+segMaior = maior;
+venc2 = venc1;
+
+maior = eleicao.candidatos[i].votos;
+venc1 = eleicao.candidatos[i].numero;
+}
+else
+{
+if (eleicao.candidatos[i].votos > segMaior)
+{
+segMaior = eleicao.candidatos[i].votos;
+venc2 = eleicao.candidatos[i].numero;
+}
+}
+}
+
+//calculando o percentual de votos do primeiro colocado
+votosValidos = eleicao.totalVotos - (eleicao.brancos + eleicao.nulos);
+perc1 = ((float)maior/votosValidos)*100;
+
+//verificando se o primeiro colocado possui mais de 50% dos votos válidos
+if (perc1 > 50)
+{
+printf ("\nO vencedor foi o candidato de numero %d com %d votos (%.2f%%)", venc1, maior, perc1);
+}
+else
+{
+printf ("\nCandidatos que irão para o segundo turno: ");
+printf ("\n\tCandidato numero %d: %d votos\n", venc1, maior);
+printf ("\tCandidato numero %d: %d votos\n", venc2, segMaior);
+}
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//declaração de constantes
+#define CAP 5 //capacidade de carros que o vetor de structs pode comportar
+
+#define ZEROKM 0
+#define USADO 1
+
+#define TRUE 1
+#define FALSE 0
+
+/*
+Pede-se a declaração de uma variável que represente o estoque de veículos da loja,
+incluindo todas as declarações de tipos que possam ser necessárias.
+*/
+
+//declaração de tipos
+typedef struct { //struct representando ano de fabricação e ano do modelo
+int fabricacao,
+modelo;
+} TAno;
+
+typedef struct { //struct representando um carro
+char placa[9],
+modelo[20],
+marca[20],
+cor[20];
+float km;
+TAno ano;
+float valor;
+int tipo;
+} TCarro;
+
+typedef TCarro TAgencia[CAP]; //struct representando a agência como uma coleção de carros
+
+//main
+void main ()
+{
+TAgencia agencia;
+...
+}
+
+/*
+i. Exibir todos os carros do modelo m, ano de fabricação entre a1 e a2 (inclusive),
+com valor não superior a x reais.
+*/
+void filtrarCarros (TAgencia ag, int quantCarros, char modelo[], int anoInicio, int anoFim, float valorLimite)
+{
+int i, cont = 0;
+
+system ("cls");
+
+printf ("Relação dos veiculos com os filtros definidos:\n");
+printf ("[modelo: %s] [ano de fabricacao entre %d e %d] [valor limite: R$ %.2f]\n\n", modelo, anoInicio, anoFim, valorLimite);
+
+//varrendo todos os veiculos da agencia
+for (i=0;i<quantCarros;i++)
+{
+if ((strcmpi(ag[i].modelo, modelo) == 0) &&
+(ag[i].ano.fabricacao >= anoInicio) && (ag[i].ano.fabricacao <= anoFim) &&
+(ag[i].valor <= valorLimite))
+{
+exibirVeiculo (ag, i);
+cont++;
+}
+}
+
+if (cont == 0)
+{
+printf ("\tNenhum carro recuperado para os filtros definidos!\n");
+}
+}
+
+//Exibe os dados do pos-ésimo veículo da agência
+void exibirVeiculo (TAgencia ag, int pos)
+{
+printf ("Placa: %s\n", ag[pos].placa);
+printf ("Modelo: %s/%s\n", ag[pos].modelo, ag[pos].marca);
+printf ("Cor: %s\n", ag[pos].cor);
+printf ("km: %.1f\n", ag[pos].km);
+printf ("ano: %d/%d\n", ag[pos].ano.fabricacao, ag[pos].ano.modelo);
+printf ("Valor: R$ %.2f\n", ag[pos].valor);
+printf ("Tipo: %s\n", ag[pos].tipo==ZEROKM?"0 km":"usado");
+printf ("--------------------------------------------------\n\n");
+}
+
+
+/*
+ii. Reajustar os valores de todos os carros 0 km, considerando um aumento de 2.5%.
+OBS: nesta implementação, preferi colocar um parâmetro taxa, ao invés de fixar com 2.5%
+*/
+void reajustar0km (TAgencia *ag, int quantCarros, float taxa)
+{
+int i;
+
+for (i=0;i<quantCarros;i++)
+{
+if ((*ag)[i].tipo == ZEROKM)
+{
+(*ag)[i].valor += (*ag)[i].valor * (taxa/100);
+}
+}
+}
+
+/*
+iii. Retirar do estoque um determinado veículo, dada a sua placa.
+*/
+int removerCarro (TAgencia *ag, int *quantCarros, char placa[])
+{
+int i;
+
+for (i=0;i<*quantCarros;i++)
+{
+if (strcmpi((*ag)[i].placa, placa) == 0)
+{
+(*quantCarros)--;
+(*ag)[i] = (*ag)[*quantCarros];
+
+return TRUE;
+}
+}
+
+return FALSE;
+}
+
+
+
+
+
+
+
+
+//importação de bibliotecas
+#include <stdio.h>
+#include <string.h>
+
+//declaração de constantes
+#define QALUNOS 100 //quantidade de alunos
+#define QDISC 20 //quantidade de disciplinas
+#define QINSC 500 //quantidade de inscrições
+
+//declaração de tipos
+typedef struct { //representando os dados de um aluno
+char nome[30];
+int matricula;
+} TAluno;
+
+typedef TAluno TVetAluno[QALUNOS]; //tipo representando o vetor de alunos
+
+
+typedef struct { //representando os dados de uma disciplina
+char nome[30];
+int codigo;
+} TDisciplina;
+
+typedef TDisciplina TVetDisc[QDISC];//tipo representando o vetor de disciplinas
+
+
+typedef struct {
+int semestre;
+int ano;
+} TSemestre;
+
+
+typedef struct { //representando os dados de uma inscrição
+int matAluno;
+int codDisc;
+TSemestre semestre;
+} TInscricao;
+
+typedef TInscricao TVetInsc[QINSC]; //tipo representando o vetor de inscrições
+
+
+/*
+Função 1:
+
+i. Exibir, para cada aluno, o total de inscrições já realizadas.
+*/
+void exibirTotalInscricoesAluno (TVetAluno A, int quantA,
+TVetDisc D, int quantD,
+TVetInsc I, int quantI)
+{
+int i, j, cont;
+
+system ("cls");
+
+//percorrendo o vetor de alunos
+for (i=0;i<quantA;i++)
+{
+//zerando o contador para cada aluno
+cont = 0;
+
+//para cada aluno, percorrer o vetor I para saber o número de inscrições já realizadas
+for (j=0;j<quantI;j++)
+{
+if (A[i].matricula == I[j].matAluno)
+{
+cont++;
+}
+}
+
+//exibindo o número de inscrições do aluno
+printf ("Aluno: %s (%d) - %d inscricoes realizadas\n", A[i].nome, A[i].matricula, cont);
+}
+}
+
+/*
+Função 2:
+
+ii. Dado um semestre, informar para cada disciplina o número de alunos inscritos.
+*/
+
+
+/*
+Função auxiliar para a principal
+
+Dado um código de disciplina, determina o seu nome após percorrer o vetor de disciplinas
+*/
+void buscarDisciplina (TVetDisc D, int quant, int codigo, char nome[])
+{
+int i;
+
+//percorrendo o vetor de disciplinas
+for (i=0;i<quant;i++)
+{
+if (D[i].codigo == codigo)
+{
+strcpy (nome, D[i].nome);
+return;
+}
+}
+}
+
+
+void exibirAlunosPorDisciplina (TVetDisc D, int quantD,
+TVetInsc I, int quantI,
+TSemestre sem)
+{
+int i, j, cont;
+char nomeDisc[30];
+
+for (i=0;i<quantI;i++)
+{
+//verificando se trata-se de uma inscrição no semestre/ano passado como parâmetro
+if ((I[i].semestre.semestre == sem.semestre) && (I[i].semestre.ano == sem.ano))
+{
+cont = 1; //começando com 1, pois já foi encontrada a primeira inscrição
+
+//verificar quantas inscrições existem nesta disciplina no mesmo semestre
+for (j=i+1;j<quantI;j++)
+{
+if ((I[i].codDisc == I[j].codDisc) &&
+(I[i].semestre.semestre == I[j].semestre.semestre) &&
+(I[i].semestre.ano == I[j].semestre.ano))
+{
+cont++;
+}
+}
+
+//recuperando o nome da disciplina a partir de seu codigo
+buscarDisciplina (D, quantD, I[i].codDisc, nomeDisc);
+
+//exibindo a quantidade de inscritos na disciplina no semestre passado como parâmetro
+printf ("Disciplina de codigo %d: %d inscritos\n", I[i].codDisc, cont);
+}
+}
+}
+
+
+
+
+
+
+//importação de bibliotecas
+#include <stdio.h>
+
+//definição de constantes
+#define TAM 100
+
+#define TRUE 1
+#define FALSE 0
+
+//definição de tipos
+typedef struct { //representando a data de aniversário de uma pessoa
+int dia,
+mes;
+} TData;
+
+typedef struct { //representando uma pessoa
+char nome[30];
+TData aniversario;
+} TPessoa;
+
+typedef TPessoa TVetPessoas[TAM]; //representando o vetor de pessoas
+
+
+/*
+Função 1:
+Determinar a quantidade de pessoas que fazem aniversário no mês M.
+*/
+int quantAniversariosMes (TVetPessoas P, int quant, int M)
+{
+int i, cont=0;
+
+for (i=0;i<quant;i++)
+{
+if (P[i].aniversario.mes == M)
+{
+cont++;
+}
+}
+
+//retornando o resultado
+return cont;
+}
+
+
+/*
+Função 2:
+Exibir os nomes de todas pessoas que fazem aniversário entre as datas d1 e d2,
+ambas do tipo Tdata.
+*/
+
+/*
+Função auxiliar: verificar se uma data está no intervalo definido por outras duas datas
+*/
+int dataNoIntervalo (TData data, TData d1, TData d2)
+{
+//verificando se a data é do mesmo mês da primeira data do intervalo
+if (data.mes == d1.mes)
+{
+if (data.dia >= d1.dia)
+{
+return TRUE;
+}
+else
+{
+return FALSE;
+}
+}
+
+//verificando se a data está nos meses entre d1 e d2
+if ((data.mes > d1.mes) && (data.mes < d2.mes))
+{
+return TRUE;
+}
+
+//verificando se a data é do mesmo mês da segunda data do intervalo
+if (data.mes == d2.mes)
+{
+if (data.dia <= d2.dia)
+{
+return TRUE;
+}
+else
+{
+return FALSE;
+}
+}
+
+//para qualquer outro caso não testado, não está no intervalo
+return FALSE;
+}
+
+void exibirAniversariantes (TVetPessoas P, int quant, TData d1, TData d2)
+{
+int i;
+
+//percorrendo o vetor de pessoas
+for (i=0;i<quant;i++)
+{
+if (dataNoIntervalo (P[i].aniversario, d1, d2) == TRUE)
+{
+printf ("Nome: %s - Aniversario: %d/%d\n", P[i].nome, P[i].aniversario.dia, P[i].aniversario.mes);
+}
+}
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+//importação de bibliotecas
+#include <stdio.h>
+
+//declaração de constantes
+#define QUANT 30 //número de disciplinas no histórico do aluno
+#define NUMDISC 50 //número de disciplinas do curso
+
+//declaração de tipos
+typedef struct { //representando uma disciplina do curso
+int codigo;
+char nome[30];
+int creditos;
+} TDisciplina;
+
+typedef TDisciplina TVetDisc[NUMDISC]; //representando o vetor de disciplinas
+
+typedef struct { //representando um semestre/ano
+int semestre,
+ano;
+} TSemestre;
+
+typedef struct { //representando uma disciplina cursada pelo aluno
+int codDisc;
+TSemestre semestre;
+float media;
+} TCursou;
+
+typedef TCursou THistorico[QUANT]; //representando o historico do aluno
+
+/*
+Implementar uma função que exiba o histórico do aluno com o seguinte formato:
+
+NomeDisciplina1 (código1) MédiaDisciplina1
+NomeDisciplina2 (código2) MédiaDisciplina2
+.
+.
+.
+NomeDisciplinaN (códigoN) MédiaDisciplinaN
+Coeficiente de rendimento: CR
+*/
+
+/*
+Função auxiliar para a principal
+
+Dado um código de disciplina, determina o seu nome após percorrer o vetor de disciplinas
+*/
+int buscarDisciplina (TVetDisc D, int quantD, int codigo)
+{
+int i;
+
+//percorrendo o vetor de disciplinas
+for (i=0;i<quantD;i++)
+{
+if (D[i].codigo == codigo)
+{
+return i;
+}
+}
+}
+
+
+void exibirHistorico (THistorico H, int quantH, TVetDisc D, int quantD)
+{
+int i, disciplina;
+char nome[30];
+float denominador = 0, numerador = 0, CR;
+
+//percorrendo todas as disciplinas cursadas pelo aluno
+for (i=0;i<quantH;i++)
+{
+disciplina = buscarDisciplina (D, quantD, H[i].codDisc);
+printf ("%s (%d) %.1f\n", D[disciplina].nome, H[i].codDisc, H[i].media);
+
+//acumulando somatórios para o cálculo do coeficiente de rendimento
+denominador += H[i].media*D[disciplina].creditos;
+numerador += D[disciplina].creditos;
+}
+
+//Calculando o CR do aluno
+CR = denominador/numerador;
+
+//exibindo o CR ao final do histórico
+printf ("\nCoeficiente de rendimento: %.1f", CR);
+}

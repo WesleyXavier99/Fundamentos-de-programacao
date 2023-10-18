@@ -1,0 +1,19 @@
+Funções para manipulação de arquivos
+
+fopen() - Abre um arquivo
+
+fclose() - Fecha um arquivo
+
+fgets() - Passa o conteudo de um arquivo para uma string
+
+fgetc() - Passa um caracter do arquivo para uma string/variavel char
+
+fputs() - Insere uma string no arquivo
+
+fputc() - insere um caracter no arquivo
+
+modos de abertura de arquivo
+
+"r" - Abre o arquivo para leitura(o arquivo deve existir)
+"w" - Cria um arquivo vazio para escrita
+"a" - Adiciona no final do arquivo(se o arquivo nao existir, ele cria)
